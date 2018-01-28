@@ -1,9 +1,36 @@
+from warnings import warn
+
 from pandas import DataFrame
 from pandas.util.testing import assert_frame_equal
 from pymongo.errors import OperationFailure
 import logging
 
 logger = logging.getLogger(__name__)
+
+def as_sorted(dframe):
+    """ Checks that dframe is monotonically increasing and sorts it if not
+
+    This method should be preferred over dframe.as_sorted as it dramatically outperforms it
+      for the case that dframe is monotonically  decreasing
+
+    Args:
+      dframe: DataFrame
+
+    Returns:
+      sorted_drame: DataFrame
+
+    Raises:
+      warning: if dframe is not monotonically increasing
+    """
+    if dframe.index.is_monotonic_increasing:
+        return dframe
+    else:
+        warn("DataFrame is not monotonic increasing and must be sorted - may incur performance penalty")
+        if dframe.index.is_monotonic_decreasing:
+            dframe.index = dframe.index[::-1]
+        else:
+            dframe = dframe.sort_index()
+        return dframe
 
 
 def indent(s, num_spaces):

@@ -15,7 +15,7 @@ from six import iteritems, string_types
 from ..date import DateRange, to_pandas_closed_closed, mktz, datetime_to_ms, ms_to_datetime, CLOSED_CLOSED, to_dt, utc_dt_to_local_dt
 from ..decorators import mongo_retry
 from ..exceptions import OverlappingDataException, NoDataFoundException, UnorderedDataException, UnhandledDtypeException, ArcticException
-from .._util import indent
+from .._util import indent, as_sorted
 from arctic._compression import compress, compressHC, decompress
 
 logger = logging.getLogger(__name__)
@@ -174,11 +174,11 @@ class TickStore(object):
         if date_range.start:
             assert date_range.start.tzinfo
             start = date_range.start
-            
+
             # If all chunks start inside of the range, we default to capping to our
             # range so that we don't fetch any chunks from the beginning of time
             start_range['$gte'] = start
-            
+
             match = self._symbol_query(symbol)
             match.update({'s': {'$lte': start}})
 
@@ -204,7 +204,7 @@ class TickStore(object):
                         break
             except StopIteration:
                 pass
-            
+
 
         # Find the end bound
         if date_range.end:
@@ -562,6 +562,7 @@ class TickStore(object):
             start = data[0]['index']
             end = data[-1]['index']
         elif isinstance(data, pd.DataFrame):
+            data = as_sorted(data)
             start = data.index[0].to_pydatetime()
             end = data.index[-1].to_pydatetime()
             pandas = True
