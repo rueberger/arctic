@@ -27,7 +27,7 @@ def as_sorted(dframe):
     else:
         warn("DataFrame is not monotonic increasing and must be sorted - may incur performance penalty")
         if dframe.index.is_monotonic_decreasing:
-            dframe.index = dframe.index[::-1]
+            dframe = dframe.iloc[::-1]
         else:
             dframe = dframe.sort_index()
         return dframe
